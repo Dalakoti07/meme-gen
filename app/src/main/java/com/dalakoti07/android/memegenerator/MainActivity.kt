@@ -3,17 +3,26 @@ package com.dalakoti07.android.memegenerator
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,20 +31,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dalakoti07.android.memegenerator.composables.EditingTypes
+import com.dalakoti07.android.memegenerator.composables.TextColorPicker
+import com.dalakoti07.android.memegenerator.composables.UiActions
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
 
+private const val TAG = "MainActivity"
+
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainViewModel by viewModels<MainViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val state by viewModel.state.collectAsStateWithLifecycle()
             MemeGeneratorTheme {
-                HomeScreen()
+                HomeScreen(
+                    states = state,
+                    onAction = {
+                        viewModel.dispatchActions(
+                            it
+                        )
+                    }
+                )
             }
         }
     }
@@ -45,7 +73,7 @@ class MainActivity : ComponentActivity() {
  * Are these image picker APIs backward compatible??
  */
 @Composable
-fun ImagePicker() {
+fun ColumnScope.ImagePicker() {
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val context = LocalContext.current
     var permissionGranted by remember { mutableStateOf(false) }
@@ -79,6 +107,55 @@ fun ImagePicker() {
         }
     }
 
+    Box(
+        modifier = Modifier.border(
+            width = 1.dp,
+            color = Color.Red,
+        )
+    ) {
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap!!,
+                contentDescription = "Selected Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.placeholder),
+                contentDescription = null,
+            )
+        }
+    }
+    Button(
+        modifier = Modifier.padding(
+            top = 10.dp,
+        ),
+        onClick = {
+            if (permissionGranted) {
+                imagePickerLauncher.launch("image/*")
+            } else {
+                requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+            }
+        },
+    ) {
+        Text(
+            if (imageBitmap == null)
+                "Pick an Image"
+            else "Change Image"
+        )
+    }
+}
+
+@Composable
+fun HomeScreen(
+    states: MainUiStates,
+    onAction: (UiActions)-> Unit = {},
+) {
+    Log.d(TAG, "HomeScreen: state -> $states")
+    var enteredText by remember {
+        mutableStateOf("")
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -87,44 +164,90 @@ fun ImagePicker() {
                 12.dp,
             ),
     ) {
-        imageBitmap?.let { img ->
-            Image(
-                bitmap = img,
-                contentDescription = "Selected Image",
-                modifier = Modifier
-                    .fillMaxWidth()
+        ImagePicker()
+        Row(
+            modifier = Modifier
+                .padding(
+                    top = 10.dp,
+                )
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            EditingTypes(
+                text = "T",
+                subText = "ext",
+                isSelected = states.editingStage == EditingStage.TEXT,
+                onClick = {
+                    Log.d(TAG, "HomeScreen: toggle text edit")
+                    onAction(UiActions.ToggleAddText)
+                },
+            )
+            EditingTypes(
+                text = "\uD83D\uDE00",
+                subText = "oji",
+                isSelected = states.editingStage == EditingStage.EMOJI,
+                modifier = Modifier.offset(
+                    x = 32.dp,
+                ),
+                onClick = {
+                    Log.d(TAG, "HomeScreen: toggle emoji edit")
+                    onAction(UiActions.ToggleAddEmoji)
+                },
             )
         }
-        Button(
-            modifier = Modifier.padding(
-                top = 10.dp,
-            ),
-            onClick = {
-                if (permissionGranted) {
-                    imagePickerLauncher.launch("image/*")
-                } else {
-                    requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
-                }
-            },
-        ) {
-            Text(
-                if (imageBitmap == null)
-                    "Pick an Image"
-                else "Change Image"
+        if (states.editingStage == EditingStage.TEXT) {
+            EnterTextArea(
+                enteredText = enteredText,
+                onSubmit = {
+
+                },
+                onEnter = {
+                    enteredText = it
+                },
             )
+        }else if(states.editingStage == EditingStage.EMOJI){
+            Text(text = "Emoji Coming Soon")
         }
     }
 }
 
 @Composable
-fun HomeScreen() {
-    ImagePicker()
+fun ColumnScope.EnterTextArea(
+    onEnter: (String) -> Unit = {},
+    enteredText: String = "",
+    onSubmit: ()-> Unit = {},
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TextField(
+            value = enteredText,
+            onValueChange = {
+                onEnter(it)
+            },
+            modifier = Modifier
+                .padding(
+                    top = 10.dp,
+                    end = 10.dp,
+                )
+                .weight(1f),
+        )
+        Button(onClick = onSubmit) {
+            Text(text = "Done")
+        }
+    }
+    TextColorPicker()
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     MemeGeneratorTheme {
-        HomeScreen()
+        HomeScreen(
+            states = MainUiStates(
+                editingStage = EditingStage.TEXT,
+            )
+        )
     }
 }
