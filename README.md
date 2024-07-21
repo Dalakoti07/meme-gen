@@ -1,6 +1,10 @@
 # Meme generator
 - Functional Requirements
   - pick meme template from your device
+  - should be as simple and sublte as 
+    - snapseed
+    - Image toolbox
+      - Read codebase
   - put emojis
   - Share Emojis
 

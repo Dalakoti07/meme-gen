@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,18 +32,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dalakoti07.android.memegenerator.MainUiStates.Companion.incrementingIdForTexts
 import com.dalakoti07.android.memegenerator.composables.EditingTypes
 import com.dalakoti07.android.memegenerator.composables.TextColorPicker
-import com.dalakoti07.android.memegenerator.composables.UiActions
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
 
 private const val TAG = "MainActivity"
@@ -58,9 +63,9 @@ class MainActivity : ComponentActivity() {
             MemeGeneratorTheme {
                 HomeScreen(
                     states = state,
-                    onAction = {
+                    onAction = { action ->
                         viewModel.dispatchActions(
-                            it
+                            action
                         )
                     }
                 )
@@ -73,7 +78,14 @@ class MainActivity : ComponentActivity() {
  * Are these image picker APIs backward compatible??
  */
 @Composable
-fun ColumnScope.ImagePicker() {
+fun ColumnScope.ImagePicker(
+    isImageSelected: Boolean,
+    onAction: (UiAction) -> Unit = {},
+    states: MainUiStates,
+) {
+    // drag
+    var offset by remember { mutableStateOf(Offset.Zero) } // State to hold the current position
+
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val context = LocalContext.current
     var permissionGranted by remember { mutableStateOf(false) }
@@ -102,18 +114,18 @@ fun ColumnScope.ImagePicker() {
         uri?.let {
             context.contentResolver.openInputStream(it)?.use { inputStream ->
                 val bitmap = BitmapFactory.decodeStream(inputStream)
+                onAction(
+                    UiAction.ImageSelected
+                )
                 imageBitmap = bitmap?.asImageBitmap()
             }
         }
     }
 
     Box(
-        modifier = Modifier.border(
-            width = 1.dp,
-            color = Color.Red,
-        )
+        modifier = Modifier,
     ) {
-        if (imageBitmap != null) {
+        if (isImageSelected) {
             Image(
                 bitmap = imageBitmap!!,
                 contentDescription = "Selected Image",
@@ -124,6 +136,25 @@ fun ColumnScope.ImagePicker() {
             Image(
                 painter = painterResource(id = R.drawable.placeholder),
                 contentDescription = null,
+            )
+        }
+        states.textsInImage.forEach { text ->
+            Text(
+                text = text.text,
+                color = text.color,
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            offset.x.toInt(),
+                            offset.y.toInt()
+                        )
+                    } // Use the dynamic offset to position the Image
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consumeAllChanges()
+                            offset += Offset(dragAmount.x, dragAmount.y)
+                        }
+                    },
             )
         }
     }
@@ -150,7 +181,7 @@ fun ColumnScope.ImagePicker() {
 @Composable
 fun HomeScreen(
     states: MainUiStates,
-    onAction: (UiActions)-> Unit = {},
+    onAction: (UiAction) -> Unit = {},
 ) {
     Log.d(TAG, "HomeScreen: state -> $states")
     var enteredText by remember {
@@ -164,48 +195,66 @@ fun HomeScreen(
                 12.dp,
             ),
     ) {
-        ImagePicker()
-        Row(
-            modifier = Modifier
-                .padding(
-                    top = 10.dp,
+        ImagePicker(
+            isImageSelected = states.isImageSelected,
+            onAction = {
+                onAction(it)
+            },
+            states = states,
+        )
+        if (states.isImageSelected) {
+            Row(
+                modifier = Modifier
+                    .padding(
+                        top = 10.dp,
+                    )
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                EditingTypes(
+                    text = "T",
+                    subText = "ext",
+                    isSelected = states.editingStage == EditingStage.TEXT,
+                    onClick = {
+                        Log.d(TAG, "HomeScreen: toggle text edit")
+                        onAction(UiAction.ToggleAddText)
+                    },
                 )
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            EditingTypes(
-                text = "T",
-                subText = "ext",
-                isSelected = states.editingStage == EditingStage.TEXT,
-                onClick = {
-                    Log.d(TAG, "HomeScreen: toggle text edit")
-                    onAction(UiActions.ToggleAddText)
-                },
-            )
-            EditingTypes(
-                text = "\uD83D\uDE00",
-                subText = "oji",
-                isSelected = states.editingStage == EditingStage.EMOJI,
-                modifier = Modifier.offset(
-                    x = 32.dp,
-                ),
-                onClick = {
-                    Log.d(TAG, "HomeScreen: toggle emoji edit")
-                    onAction(UiActions.ToggleAddEmoji)
-                },
-            )
+                EditingTypes(
+                    text = "\uD83D\uDE00",
+                    subText = "oji",
+                    isSelected = states.editingStage == EditingStage.EMOJI,
+                    modifier = Modifier.offset(
+                        x = 32.dp,
+                    ),
+                    onClick = {
+                        Log.d(TAG, "HomeScreen: toggle emoji edit")
+                        onAction(UiAction.ToggleAddEmoji)
+                    },
+                )
+            }
         }
         if (states.editingStage == EditingStage.TEXT) {
             EnterTextArea(
                 enteredText = enteredText,
                 onSubmit = {
-
+                    onAction(
+                        UiAction.AddTextViewToImage(
+                            textNCoordinates = TextNCoordinates(
+                                text = enteredText,
+                                xOffset = 0,
+                                yOffset = 0,
+                                id = incrementingIdForTexts++,
+                                color = Color.Black,
+                            )
+                        )
+                    )
                 },
                 onEnter = {
                     enteredText = it
                 },
             )
-        }else if(states.editingStage == EditingStage.EMOJI){
+        } else if (states.editingStage == EditingStage.EMOJI) {
             Text(text = "Emoji Coming Soon")
         }
     }
@@ -215,7 +264,7 @@ fun HomeScreen(
 fun ColumnScope.EnterTextArea(
     onEnter: (String) -> Unit = {},
     enteredText: String = "",
-    onSubmit: ()-> Unit = {},
+    onSubmit: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
