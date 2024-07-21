@@ -7,6 +7,16 @@ android {
     namespace = "com.dalakoti07.android.memegenerator"
     compileSdk = 34
 
+    // Define the signing configurations
+    signingConfigs {
+        create("release") {
+            keyAlias = "alias01"
+            keyPassword = "password"
+            storeFile = File(rootDir, "release_sample.keystore")
+            storePassword = "password"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.dalakoti07.android.memegenerator"
         minSdk = 24
@@ -27,6 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
