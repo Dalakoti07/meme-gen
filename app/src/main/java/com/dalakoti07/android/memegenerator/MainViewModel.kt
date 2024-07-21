@@ -21,6 +21,15 @@ class MainViewModel : ViewModel() {
     fun dispatchActions(action: UiAction) {
         Log.d(TAG, "dispatchActions: $action")
         when (action) {
+            is UiAction.RemoveImage->{
+                _state.update {
+                    state.value.copy(
+                        textsInImage = state.value.textsInImage.filter {
+                            it.id != action.textNCoordinates.id
+                        }
+                    )
+                }
+            }
             is UiAction.AddTextViewToImage->{
                 _state.update {
                     state.value.copy(

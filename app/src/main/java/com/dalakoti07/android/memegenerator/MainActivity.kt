@@ -10,8 +10,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,13 +41,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dalakoti07.android.memegenerator.MainUiStates.Companion.incrementingIdForTexts
@@ -83,8 +89,10 @@ fun ColumnScope.ImagePicker(
     onAction: (UiAction) -> Unit = {},
     states: MainUiStates,
 ) {
-    // drag
+    // image manipulation
     var offset by remember { mutableStateOf(Offset.Zero) } // State to hold the current position
+    var scale by remember { mutableStateOf(1f) }
+    var rotationGlobal by remember { mutableStateOf(0f) }
 
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val context = LocalContext.current
@@ -139,23 +147,45 @@ fun ColumnScope.ImagePicker(
             )
         }
         states.textsInImage.forEach { text ->
-            Text(
-                text = text.text,
-                color = text.color,
+            val initFontSize = 50
+            Box(
                 modifier = Modifier
-                    .offset {
-                        IntOffset(
-                            offset.x.toInt(),
-                            offset.y.toInt()
-                        )
-                    } // Use the dynamic offset to position the Image
+                    .offset { IntOffset(offset.x.toInt(), offset.y.toInt()) }
+                    .graphicsLayer(
+                        rotationZ = rotationGlobal
+                    )
                     .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consumeAllChanges()
-                            offset += Offset(dragAmount.x, dragAmount.y)
+                        detectTransformGestures { _, pan, zoom, rotate ->
+                            offset += pan
+                            scale *= zoom
+                            rotationGlobal += rotate
                         }
                     },
-            )
+            ) {
+                Text(
+                    text = text.text,
+                    color = text.color,
+                    modifier = Modifier
+                        .padding(8.dp),
+                    fontSize = (initFontSize * scale).sp,
+                )
+                Image(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = null,
+                    alignment = Alignment.TopEnd,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(
+                            color = Color.White,
+                            shape = CircleShape,
+                        )
+                        .clickable {
+                            onAction(
+                                UiAction.RemoveImage(text)
+                            )
+                        },
+                )
+            }
         }
     }
     Button(
@@ -255,7 +285,12 @@ fun HomeScreen(
                 },
             )
         } else if (states.editingStage == EditingStage.EMOJI) {
-            Text(text = "Emoji Coming Soon")
+            Text(
+                modifier = Modifier.padding(
+                    top = 20.dp,
+                ),
+                text = "Emoji Coming Soon",
+            )
         }
     }
 }

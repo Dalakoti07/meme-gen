@@ -8,4 +8,7 @@ sealed class UiAction {
     data class AddTextViewToImage(
         val textNCoordinates: TextNCoordinates,
     ): UiAction()
+    data class RemoveImage(
+        val textNCoordinates: TextNCoordinates,
+    ): UiAction()
 }
