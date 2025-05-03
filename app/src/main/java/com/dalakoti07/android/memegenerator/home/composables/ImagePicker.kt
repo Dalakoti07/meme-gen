@@ -151,56 +151,6 @@ fun BoxWithConstraintsScope.ImagePicker(
 }
 
 @Composable
-private fun ShowTexts(states: MainUiStates, onAction: (UiAction) -> Unit = {}) {
-    // image manipulation
-    var offset by remember { mutableStateOf(Offset.Zero) } // State to hold the current position
-    var scale by remember { mutableStateOf(1f) }
-    var rotationGlobal by remember { mutableStateOf(0f) }
-
-    states.textsInImage.forEach { text ->
-        val initFontSize = 50
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(offset.x.toInt(), offset.y.toInt()) }
-                .graphicsLayer(
-                    rotationZ = rotationGlobal
-                )
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, rotate ->
-                        offset += pan
-                        scale *= zoom
-                        rotationGlobal += rotate
-                    }
-                },
-        ) {
-            Text(
-                text = text.text,
-                color = text.color,
-                modifier = Modifier
-                    .padding(8.dp),
-                fontSize = (initFontSize * scale).sp,
-            )
-            Image(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = null,
-                alignment = Alignment.TopEnd,
-                modifier = Modifier
-                    .size(20.dp)
-                    .background(
-                        color = Color.White,
-                        shape = CircleShape,
-                    )
-                    .clickable {
-                        onAction(
-                            UiAction.RemoveImage(text)
-                        )
-                    },
-            )
-        }
-    }
-}
-
-@Composable
 private fun BoxWithConstraintsScope.ShowPlaceHolderOrImage(
     isImageSelected: Boolean,
     imageBitmap: ImageBitmap?,

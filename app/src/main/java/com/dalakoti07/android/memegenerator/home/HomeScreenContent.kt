@@ -61,6 +61,9 @@ fun HomeScreenContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        color = Color(0xFFfef9f0),
+                    )
                     .align(Alignment.BottomCenter)
             ) {
                 SubMenuAsPerMenu(states, onAction)
@@ -121,7 +124,18 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
             }
         }
 
-        MenuItemOptions.EXPORT -> {}
+        MenuItemOptions.EXPORT -> {
+            LazyRow(modifier = Modifier.fillMaxWidth()) {
+                item {
+                    EditingOptions(
+                        "As Image", "Share as an image now",
+                        onClick = {
+                            onAction(UiAction.AddEmojiOverImage)
+                        },
+                    )
+                }
+            }
+        }
         MenuItemOptions.NONE -> {}
     }
 }
