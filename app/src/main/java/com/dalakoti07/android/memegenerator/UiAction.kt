@@ -6,9 +6,9 @@ sealed class UiAction {
     data object ToggleAddEmoji: UiAction()
     data object ImageSelected: UiAction()
     data class AddTextViewToImage(
-        val textNCoordinates: TextNCoordinates,
+        val textViewInImage: TextViewInImage,
     ): UiAction()
     data class RemoveImage(
-        val textNCoordinates: TextNCoordinates,
+        val textViewInImage: TextViewInImage,
     ): UiAction()
 }

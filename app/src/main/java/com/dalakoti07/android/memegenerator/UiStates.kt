@@ -8,7 +8,7 @@ enum class EditingStage {
     NONE,
 }
 
-data class TextNCoordinates(
+data class TextViewInImage(
     val text: String,
     val xOffset: Int,
     val yOffset: Int,
@@ -19,7 +19,7 @@ data class TextNCoordinates(
 data class MainUiStates(
     val editingStage: EditingStage,
     val isImageSelected: Boolean = false,
-    val textsInImage: List<TextNCoordinates> = emptyList(),
+    val textsInImage: List<TextViewInImage> = emptyList(),
 ) {
     companion object {
         var incrementingIdForTexts = 1

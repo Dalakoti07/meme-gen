@@ -82,10 +82,17 @@ fun MemeGeneratorTheme(
 internal val LocalColors = staticCompositionLocalOf {
     LightColorScheme
 }
+internal val LocalTypography = staticCompositionLocalOf {
+    Typography
+}
 
 object MemeGeneratorTheme {
     val colors: ColorScheme
         @Composable
         @ReadOnlyComposable
         get() = LocalColors.current
+    val styles: Typography
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTypography.current
 }

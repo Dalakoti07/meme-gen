@@ -25,7 +25,7 @@ class MainViewModel : ViewModel() {
                 _state.update {
                     state.value.copy(
                         textsInImage = state.value.textsInImage.filter {
-                            it.id != action.textNCoordinates.id
+                            it.id != action.textViewInImage.id
                         }
                     )
                 }
@@ -34,7 +34,7 @@ class MainViewModel : ViewModel() {
                 _state.update {
                     state.value.copy(
                         textsInImage = state.value.textsInImage
-                                + action.textNCoordinates
+                                + action.textViewInImage
                     )
                 }
             }
