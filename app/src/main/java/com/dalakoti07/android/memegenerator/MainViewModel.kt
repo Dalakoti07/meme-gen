@@ -18,6 +18,7 @@ sealed class OneTimeEvents {
     data object SelectImageFromGallery : OneTimeEvents()
     data class Error(val message: String) : OneTimeEvents()
     data object ShowAddImageDialog : OneTimeEvents()
+    data object ExportAsImage : OneTimeEvents()
     data object ShowAddEmojiDialog : OneTimeEvents()
 }
 
@@ -116,6 +117,11 @@ class MainViewModel : ViewModel() {
             }
             is UiAction.AddEmojiOverImage->{
 
+            }
+            is UiAction.ExportAsImage ->{
+                viewModelScope.launch {
+                    _events.send(OneTimeEvents.ExportAsImage)
+                }
             }
         }
     }

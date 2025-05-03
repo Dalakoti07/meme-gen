@@ -21,4 +21,5 @@ sealed class UiAction {
     data class MenuItemSelected(val menuItemSelected: MenuItemOptions) : UiAction()
     data object AddTextOverImage : UiAction()
     data object AddEmojiOverImage : UiAction()
+    data object ExportAsImage : UiAction()
 }

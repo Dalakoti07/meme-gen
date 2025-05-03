@@ -1,5 +1,7 @@
 package com.dalakoti07.android.memegenerator.home
 
+import android.content.Intent
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,21 +15,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.dalakoti07.android.memegenerator.EditingStage
+import androidx.core.content.FileProvider
 import com.dalakoti07.android.memegenerator.MainUiStates
 import com.dalakoti07.android.memegenerator.MenuItemOptions
 import com.dalakoti07.android.memegenerator.OneTimeEvents
 import com.dalakoti07.android.memegenerator.UiAction
+import com.dalakoti07.android.memegenerator.export.ExportToBitmapContent
+import com.dalakoti07.android.memegenerator.export.renderComposableToBitmap
+import com.dalakoti07.android.memegenerator.export.saveBitmapToFile
 import com.dalakoti07.android.memegenerator.home.composables.EditingOptions
-import com.dalakoti07.android.memegenerator.home.composables.ImagePicker
+import com.dalakoti07.android.memegenerator.home.composables.TheCanvasArea
 import com.dalakoti07.android.memegenerator.home.composables.TintOptions
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 
 @Preview(showBackground = true)
@@ -51,7 +63,7 @@ fun HomeScreenContent(
     events: Flow<OneTimeEvents> = flow {},
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        ImagePicker(
+        TheCanvasArea(
             isImageSelected = states.isImageSelected,
             onAction = onAction,
             states = states,
@@ -130,12 +142,13 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
                     EditingOptions(
                         "As Image", "Share as an image now",
                         onClick = {
-                            onAction(UiAction.AddEmojiOverImage)
+                            onAction(UiAction.ExportAsImage)
                         },
                     )
                 }
             }
         }
+
         MenuItemOptions.NONE -> {}
     }
 }

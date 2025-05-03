@@ -1,27 +1,21 @@
 package com.dalakoti07.android.memegenerator.home.composables
 
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,38 +25,81 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.core.view.drawToBitmap
 import com.dalakoti07.android.memegenerator.MainUiStates
 import com.dalakoti07.android.memegenerator.MainUiStates.Companion.incrementingIdForTexts
 import com.dalakoti07.android.memegenerator.OneTimeEvents
 import com.dalakoti07.android.memegenerator.TextViewInImage
 import com.dalakoti07.android.memegenerator.UiAction
+import com.dalakoti07.android.memegenerator.export.saveBitmapToFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
+import kotlin.math.roundToInt
 
 /**
  * Are these image picker APIs backward compatible??
  */
 @Composable
-fun BoxWithConstraintsScope.ImagePicker(
+fun BoxWithConstraintsScope.TheCanvasArea(
     isImageSelected: Boolean,
     onAction: (UiAction) -> Unit = {},
     states: MainUiStates,
     events: Flow<OneTimeEvents> = flow {},
 ) {
-    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    // the export part
     val context = LocalContext.current
+    val view = LocalView.current
+    var composableBounds by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    LaunchedEffect(events) {
+        events.collectLatest {
+            when (it) {
+                is OneTimeEvents.ExportAsImage -> {
+                    composableBounds?.let { bounds ->
+                        // 1. Capture full screen
+                        val fullBitmap = view.drawToBitmap()
+
+                        // 2. Crop bitmap to the composable's position
+                        val scale = context.resources.displayMetrics.density
+                        val croppedBitmap = Bitmap.createBitmap(
+                            fullBitmap,
+                            bounds.left.roundToInt(),
+                            bounds.top.roundToInt(),
+                            bounds.width.roundToInt(),
+                            bounds.height.roundToInt()
+                        )
+                        val file = saveBitmapToFile(context, croppedBitmap, "img${System.currentTimeMillis()}")
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.provider",
+                            file
+                        )
+
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "image/png"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share via"))
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+    // the export part
+
+    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var permissionGranted by remember { mutableStateOf(false) }
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -97,13 +134,19 @@ fun BoxWithConstraintsScope.ImagePicker(
         }
     }
 
-    ShowPlaceHolderOrImage(isImageSelected, imageBitmap, onClick = {
-        if (permissionGranted) {
-            imagePickerLauncher.launch("image/*")
-        } else {
-            requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
-        }
-    })
+    ShowPlaceHolderOrImage(
+        modifier = Modifier.onGloballyPositioned { layoutCoordinates ->
+            composableBounds = layoutCoordinates.boundsInWindow()
+        },
+        isImageSelected = isImageSelected,
+        imageBitmap = imageBitmap,
+        onClick = {
+            if (permissionGranted) {
+                imagePickerLauncher.launch("image/*")
+            } else {
+                requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+            }
+        })
     var showAddImageDialog by remember {
         mutableStateOf(false)
     }
@@ -152,6 +195,7 @@ fun BoxWithConstraintsScope.ImagePicker(
 
 @Composable
 private fun BoxWithConstraintsScope.ShowPlaceHolderOrImage(
+    modifier: Modifier = Modifier,
     isImageSelected: Boolean,
     imageBitmap: ImageBitmap?,
     onClick: () -> Unit,
@@ -169,19 +213,10 @@ private fun BoxWithConstraintsScope.ShowPlaceHolderOrImage(
         Image(
             bitmap = imageBitmap,
             contentDescription = "Selected Image",
-            modifier = if (isPortrait) {
-                // Fill both width and height for portrait
-                Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center)
-                    .fillMaxHeight()
-            } else {
-                // Fill width only, height wraps content for landscape
-                Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center)
-                    .aspectRatio(imageAspectRatio)
-            }
+            modifier =  modifier
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .aspectRatio(imageAspectRatio),
         )
     } else {
         Icon(
