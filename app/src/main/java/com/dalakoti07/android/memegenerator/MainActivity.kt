@@ -33,6 +33,7 @@ import com.dalakoti07.android.memegenerator.composables.TextColorPicker
 import com.dalakoti07.android.memegenerator.home.HomeScreen
 import com.dalakoti07.android.memegenerator.home.composables.ImagePicker
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
+import com.dalakoti07.android.memegenerator.utils.rememberFlowWithLifecycle
 
 private const val TAG = "MainActivity"
 
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
+            val events = rememberFlowWithLifecycle(flow = viewModel.events)
             MemeGeneratorTheme {
                 HomeScreen(
                     states = state,
@@ -51,7 +53,8 @@ class MainActivity : ComponentActivity() {
                         viewModel.dispatchActions(
                             action
                         )
-                    }
+                    },
+                    events = events,
                 )
             }
         }
@@ -67,7 +70,7 @@ fun HomeScreenDeprecated(
     var enteredText by remember {
         mutableStateOf("")
     }
-    Column(
+    /*Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
@@ -75,13 +78,13 @@ fun HomeScreenDeprecated(
                 12.dp,
             ),
     ) {
-        /*ImagePicker(
+        *//*ImagePicker(
             isImageSelected = states.isImageSelected,
             onAction = {
                 onAction(it)
             },
             states = states,
-        )*/
+        )*//*
         if (states.isImageSelected) {
             Row(
                 modifier = Modifier
@@ -118,17 +121,7 @@ fun HomeScreenDeprecated(
             EnterTextArea(
                 enteredText = enteredText,
                 onSubmit = {
-                    onAction(
-                        UiAction.AddTextViewToImage(
-                            textViewInImage = TextViewInImage(
-                                text = enteredText,
-                                xOffset = 0,
-                                yOffset = 0,
-                                id = incrementingIdForTexts++,
-                                color = Color.Black,
-                            )
-                        )
-                    )
+
                 },
                 onEnter = {
                     enteredText = it
@@ -142,7 +135,7 @@ fun HomeScreenDeprecated(
                 text = "Emoji Coming Soon",
             )
         }
-    }
+    }*/
 }
 
 // todo convert into dialog content for text
@@ -180,9 +173,7 @@ fun ColumnScope.EnterTextArea(
 fun HomeScreenPreview() {
     MemeGeneratorTheme {
         HomeScreen(
-            states = MainUiStates(
-                editingStage = EditingStage.TEXT,
-            )
+            states = MainUiStates()
         )
     }
 }

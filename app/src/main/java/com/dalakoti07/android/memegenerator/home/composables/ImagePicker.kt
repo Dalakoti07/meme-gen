@@ -9,10 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,14 +38,18 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.dalakoti07.android.memegenerator.MainUiStates
-import com.dalakoti07.android.memegenerator.R
+import com.dalakoti07.android.memegenerator.MainUiStates.Companion.incrementingIdForTexts
+import com.dalakoti07.android.memegenerator.OneTimeEvents
+import com.dalakoti07.android.memegenerator.TextViewInImage
 import com.dalakoti07.android.memegenerator.UiAction
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
 
 /**
  * Are these image picker APIs backward compatible??
@@ -59,12 +59,8 @@ fun BoxWithConstraintsScope.ImagePicker(
     isImageSelected: Boolean,
     onAction: (UiAction) -> Unit = {},
     states: MainUiStates,
+    events: Flow<OneTimeEvents> = flow {},
 ) {
-    // image manipulation
-    var offset by remember { mutableStateOf(Offset.Zero) } // State to hold the current position
-    var scale by remember { mutableStateOf(1f) }
-    var rotationGlobal by remember { mutableStateOf(0f) }
-
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val context = LocalContext.current
     var permissionGranted by remember { mutableStateOf(false) }
@@ -108,6 +104,59 @@ fun BoxWithConstraintsScope.ImagePicker(
             requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
         }
     })
+    var showAddImageDialog by remember {
+        mutableStateOf(false)
+    }
+    if (showAddImageDialog) {
+        ShowDialogForTextDetails(
+            onClose = {
+                showAddImageDialog = false
+            },
+            onDone = {
+                showAddImageDialog = false
+                onAction(
+                    UiAction.AddTextViewToImage(
+                        textViewInImage = TextViewInImage(
+                            text = it,
+                            xOffset = 10,
+                            yOffset = 10,
+                            id = incrementingIdForTexts++,
+                            color = Color.Black,
+                        )
+                    )
+                )
+            },
+        )
+    }
+    ShowTexts(states, onAction)
+    LaunchedEffect(key1 = events) {
+        events.collectLatest {
+            when (it) {
+                is OneTimeEvents.SelectImageFromGallery -> {
+                    if (permissionGranted) {
+                        imagePickerLauncher.launch("image/*")
+                    } else {
+                        requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+                    }
+                }
+
+                is OneTimeEvents.ShowAddImageDialog -> {
+                    showAddImageDialog = true
+                }
+
+                else -> {}
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShowTexts(states: MainUiStates, onAction: (UiAction) -> Unit = {}) {
+    // image manipulation
+    var offset by remember { mutableStateOf(Offset.Zero) } // State to hold the current position
+    var scale by remember { mutableStateOf(1f) }
+    var rotationGlobal by remember { mutableStateOf(0f) }
+
     states.textsInImage.forEach { text ->
         val initFontSize = 50
         Box(
@@ -166,19 +215,21 @@ private fun BoxWithConstraintsScope.ShowPlaceHolderOrImage(
     // Check if the image is portrait
     val isPortrait = imageAspectRatio < 1f
 
-    if (isImageSelected) {
+    if (isImageSelected && imageBitmap != null) {
         Image(
-            bitmap = imageBitmap!!,
+            bitmap = imageBitmap,
             contentDescription = "Selected Image",
             modifier = if (isPortrait) {
                 // Fill both width and height for portrait
                 Modifier
                     .fillMaxWidth()
+                    .align(Alignment.Center)
                     .fillMaxHeight()
             } else {
                 // Fill width only, height wraps content for landscape
                 Modifier
                     .fillMaxWidth()
+                    .align(Alignment.Center)
                     .aspectRatio(imageAspectRatio)
             }
         )

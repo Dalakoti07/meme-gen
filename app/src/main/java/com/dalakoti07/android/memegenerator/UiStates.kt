@@ -2,9 +2,18 @@ package com.dalakoti07.android.memegenerator
 
 import androidx.compose.ui.graphics.Color
 
+enum class MenuItemOptions{
+    NONE,
+    LOOKS,
+    EDITING,
+    EXPORT,
+}
+
 enum class EditingStage {
     TEXT,
     EMOJI,
+    CROP,
+    Rotate,
     NONE,
 }
 
@@ -17,16 +26,14 @@ data class TextViewInImage(
 )
 
 data class MainUiStates(
-    val editingStage: EditingStage,
+    val menuItemSelected: MenuItemOptions = MenuItemOptions.NONE,
     val isImageSelected: Boolean = false,
     val textsInImage: List<TextViewInImage> = emptyList(),
 ) {
     companion object {
         var incrementingIdForTexts = 1
         fun initState(): MainUiStates {
-            return MainUiStates(
-                editingStage = EditingStage.NONE,
-            )
+            return MainUiStates()
         }
     }
 }

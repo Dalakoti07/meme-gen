@@ -1,28 +1,34 @@
 package com.dalakoti07.android.memegenerator.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddCircle
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dalakoti07.android.memegenerator.EditingStage
 import com.dalakoti07.android.memegenerator.MainUiStates
+import com.dalakoti07.android.memegenerator.MenuItemOptions
+import com.dalakoti07.android.memegenerator.OneTimeEvents
 import com.dalakoti07.android.memegenerator.UiAction
+import com.dalakoti07.android.memegenerator.home.composables.EditingOptions
 import com.dalakoti07.android.memegenerator.home.composables.ImagePicker
+import com.dalakoti07.android.memegenerator.home.composables.TintOptions
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 @Preview(showBackground = true)
 @Composable
@@ -30,7 +36,8 @@ fun PreviewHomeScreenContent() {
     MemeGeneratorTheme {
         HomeScreenContent(
             states = MainUiStates(
-                editingStage = EditingStage.TEXT,
+                isImageSelected = true,
+                menuItemSelected = MenuItemOptions.EDITING,
             ),
         )
     }
@@ -41,30 +48,98 @@ fun HomeScreenContent(
     modifier: Modifier = Modifier,
     onAction: (UiAction) -> Unit = {},
     states: MainUiStates,
+    events: Flow<OneTimeEvents> = flow {},
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         ImagePicker(
             isImageSelected = states.isImageSelected,
             onAction = onAction,
             states = states,
+            events = events
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-        ) {
-            MainMenuOptions("Looks")
-            MainMenuOptions("Editing")
-            MainMenuOptions("Export")
+        if (states.isImageSelected) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
+                SubMenuAsPerMenu(states, onAction)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                ) {
+                    MainMenuOptions(
+                        text = "Looks",
+                        isSelected = states.menuItemSelected == MenuItemOptions.LOOKS,
+                        onAction = { onAction(UiAction.MenuItemSelected(MenuItemOptions.LOOKS)) }
+                    )
+                    MainMenuOptions(
+                        text = "Editing",
+                        isSelected = states.menuItemSelected == MenuItemOptions.EDITING,
+                        onAction = { onAction(UiAction.MenuItemSelected(MenuItemOptions.EDITING)) }
+                    )
+                    MainMenuOptions(
+                        text = "Export",
+                        isSelected = states.menuItemSelected == MenuItemOptions.EXPORT,
+                        onAction = { onAction(UiAction.MenuItemSelected(MenuItemOptions.EXPORT)) }
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun RowScope.MainMenuOptions(text: String) {
-    Box(modifier = Modifier
-        .padding(10.dp)
-        .weight(1f), contentAlignment = Alignment.Center) {
+fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
+    when (states.menuItemSelected) {
+        MenuItemOptions.LOOKS -> {
+            LazyRow(modifier = Modifier.fillMaxWidth()) {
+                items(10) {
+                    TintOptions(it)
+                }
+            }
+        }
+
+        MenuItemOptions.EDITING -> {
+            LazyRow(modifier = Modifier.fillMaxWidth()) {
+                item {
+                    EditingOptions(
+                        "Text", "Add text on top of Images",
+                        onClick = {
+                            onAction(UiAction.AddTextOverImage)
+                        },
+                    )
+                }
+                item {
+                    EditingOptions(
+                        "Emoji", "Add Emoji on top of Images",
+                        onClick = {
+                            onAction(UiAction.AddEmojiOverImage)
+                        },
+                    )
+                }
+            }
+        }
+
+        MenuItemOptions.EXPORT -> {}
+        MenuItemOptions.NONE -> {}
+    }
+}
+
+@Composable
+fun RowScope.MainMenuOptions(text: String, isSelected: Boolean, onAction: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clickable {
+                onAction()
+            }
+            .background(
+                color = if (isSelected) Color(0xFFF5ECD5) else Color.Transparent,
+            )
+            .padding(10.dp)
+            .weight(1f),
+        contentAlignment = Alignment.Center,
+    ) {
         Text(text, style = MemeGeneratorTheme.styles.bodyLarge, modifier = Modifier)
     }
 }

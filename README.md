@@ -11,6 +11,7 @@
 - Non functional
   - State of art android practises
   - Use SDP for compose
+  - Linter
   - CI CD using fastlane
 
 
