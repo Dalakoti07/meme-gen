@@ -31,8 +31,6 @@ import com.dalakoti07.android.memegenerator.MainUiStates
 import com.dalakoti07.android.memegenerator.MenuItemOptions
 import com.dalakoti07.android.memegenerator.OneTimeEvents
 import com.dalakoti07.android.memegenerator.UiAction
-import com.dalakoti07.android.memegenerator.export.ExportToBitmapContent
-import com.dalakoti07.android.memegenerator.export.renderComposableToBitmap
 import com.dalakoti07.android.memegenerator.export.saveBitmapToFile
 import com.dalakoti07.android.memegenerator.home.composables.EditingOptions
 import com.dalakoti07.android.memegenerator.home.composables.TheCanvasArea
