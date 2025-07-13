@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MemeGenerator"
 include(":app")
- 
+include(":benchmark")

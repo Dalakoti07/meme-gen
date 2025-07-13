@@ -3,9 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissions for accessing photos -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MemeGenerator"
         tools:targetApi="31">
+        <profileable android:shell="true" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -28,6 +31,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
