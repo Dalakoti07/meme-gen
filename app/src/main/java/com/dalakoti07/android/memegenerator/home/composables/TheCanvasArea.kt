@@ -227,6 +227,22 @@ fun BoxWithConstraintsScope.TheCanvasArea(
                     }
                 }
 
+                is OneTimeEvents.ApplyWatercolor -> {
+                    originalBitmap?.let { src ->
+                        val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
+                        NativeFilters.applyWatercolor(mutable, it.radius)
+                        imageBitmap = mutable.asImageBitmap()
+                    }
+                }
+
+                is OneTimeEvents.ApplyHalftone -> {
+                    originalBitmap?.let { src ->
+                        val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
+                        NativeFilters.applyHalftone(mutable, it.cellSize)
+                        imageBitmap = mutable.asImageBitmap()
+                    }
+                }
+
                 else -> {}
             }
         }

@@ -37,4 +37,12 @@ sealed class UiAction {
         val radius: Int = 3,
         val levels: Int = 16,
     ) : UiAction()
+
+    data class ApplyWatercolor(
+        val radius: Int = 4,
+    ) : UiAction()
+
+    data class ApplyHalftone(
+        val cellSize: Int = 8,
+    ) : UiAction()
 }

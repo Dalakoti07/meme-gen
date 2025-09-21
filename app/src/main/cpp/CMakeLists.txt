@@ -5,6 +5,8 @@ add_library(nativefilters SHARED
     nativefilters.cpp
     nativefilters_sketch.cpp
     nativefilters_oilpaint.cpp
+    nativefilters_watercolor.cpp
+    nativefilters_halftone.cpp
 )
 
 find_library(log-lib log)

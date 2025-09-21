@@ -23,6 +23,8 @@ sealed class OneTimeEvents {
     data class ApplyTint(val argbColor: Int, val strength: Float) : OneTimeEvents()
     data class ApplySketch(val edgeSigma: Float, val shadeSigma: Float) : OneTimeEvents()
     data class ApplyOilPaint(val radius: Int, val levels: Int) : OneTimeEvents()
+    data class ApplyWatercolor(val radius: Int) : OneTimeEvents()
+    data class ApplyHalftone(val cellSize: Int) : OneTimeEvents()
 }
 
 class MainViewModel : ViewModel() {
@@ -139,6 +141,16 @@ class MainViewModel : ViewModel() {
             is UiAction.ApplyOilPaint -> {
                 viewModelScope.launch {
                     _events.send(OneTimeEvents.ApplyOilPaint(action.radius, action.levels))
+                }
+            }
+            is UiAction.ApplyWatercolor -> {
+                viewModelScope.launch {
+                    _events.send(OneTimeEvents.ApplyWatercolor(action.radius))
+                }
+            }
+            is UiAction.ApplyHalftone -> {
+                viewModelScope.launch {
+                    _events.send(OneTimeEvents.ApplyHalftone(action.cellSize))
                 }
             }
         }

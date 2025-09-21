@@ -150,6 +150,22 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
                         },
                     )
                 }
+                item {
+                    EditingOptions(
+                        "Watercolor", "Kuwahara watercolor",
+                        onClick = {
+                            onAction(UiAction.ApplyWatercolor())
+                        },
+                    )
+                }
+                item {
+                    EditingOptions(
+                        "Halftone", "Comic dot shading",
+                        onClick = {
+                            onAction(UiAction.ApplyHalftone())
+                        },
+                    )
+                }
             }
         }
 
