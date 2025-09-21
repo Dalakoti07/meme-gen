@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -101,6 +102,11 @@ fun BoxWithConstraintsScope.TheCanvasArea(
 
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var permissionGranted by remember { mutableStateOf(false) }
+    val readImagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        android.Manifest.permission.READ_MEDIA_IMAGES
+    } else {
+        android.Manifest.permission.READ_EXTERNAL_STORAGE
+    }
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -111,12 +117,12 @@ fun BoxWithConstraintsScope.TheCanvasArea(
     LaunchedEffect(key1 = true) {
         if (ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.READ_MEDIA_IMAGES
+                readImagePermission
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             permissionGranted = true
         } else {
-            requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+            requestPermissionLauncher.launch(readImagePermission)
         }
     }
 
@@ -144,7 +150,7 @@ fun BoxWithConstraintsScope.TheCanvasArea(
             if (permissionGranted) {
                 imagePickerLauncher.launch("image/*")
             } else {
-                requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+                requestPermissionLauncher.launch(readImagePermission)
             }
         })
     var showAddImageDialog by remember {
@@ -179,7 +185,7 @@ fun BoxWithConstraintsScope.TheCanvasArea(
                     if (permissionGranted) {
                         imagePickerLauncher.launch("image/*")
                     } else {
-                        requestPermissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+                        requestPermissionLauncher.launch(readImagePermission)
                     }
                 }
 
