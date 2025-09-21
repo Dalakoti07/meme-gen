@@ -22,4 +22,9 @@ sealed class UiAction {
     data object AddTextOverImage : UiAction()
     data object AddEmojiOverImage : UiAction()
     data object ExportAsImage : UiAction()
+
+    data class ApplyTint(
+        val argbColor: Int,
+        val strength: Float = 0.4f,
+    ) : UiAction()
 }

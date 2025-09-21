@@ -20,6 +20,7 @@ sealed class OneTimeEvents {
     data object ShowAddImageDialog : OneTimeEvents()
     data object ExportAsImage : OneTimeEvents()
     data object ShowAddEmojiDialog : OneTimeEvents()
+    data class ApplyTint(val argbColor: Int, val strength: Float) : OneTimeEvents()
 }
 
 class MainViewModel : ViewModel() {
@@ -121,6 +122,11 @@ class MainViewModel : ViewModel() {
             is UiAction.ExportAsImage ->{
                 viewModelScope.launch {
                     _events.send(OneTimeEvents.ExportAsImage)
+                }
+            }
+            is UiAction.ApplyTint -> {
+                viewModelScope.launch {
+                    _events.send(OneTimeEvents.ApplyTint(action.argbColor, action.strength))
                 }
             }
         }

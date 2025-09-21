@@ -4,6 +4,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import androidx.compose.ui.graphics.toArgb
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +48,7 @@ import com.dalakoti07.android.memegenerator.OneTimeEvents
 import com.dalakoti07.android.memegenerator.TextViewInImage
 import com.dalakoti07.android.memegenerator.UiAction
 import com.dalakoti07.android.memegenerator.export.saveBitmapToFile
+import com.dalakoti07.android.memegenerator.nativefilters.NativeFilters
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
@@ -101,6 +107,7 @@ fun BoxWithConstraintsScope.TheCanvasArea(
     // the export part
 
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var originalBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var permissionGranted by remember { mutableStateOf(false) }
     val readImagePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         android.Manifest.permission.READ_MEDIA_IMAGES
@@ -135,6 +142,7 @@ fun BoxWithConstraintsScope.TheCanvasArea(
                 onAction(
                     UiAction.ImageSelected
                 )
+                originalBitmap = bitmap
                 imageBitmap = bitmap?.asImageBitmap()
             }
         }
@@ -191,6 +199,16 @@ fun BoxWithConstraintsScope.TheCanvasArea(
 
                 is OneTimeEvents.ShowAddImageDialog -> {
                     showAddImageDialog = true
+                }
+
+                is OneTimeEvents.ApplyTint -> {
+                    originalBitmap?.let { src ->
+                        // Work on a mutable copy
+                        val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
+                        // Apply native tint in-place
+                        NativeFilters.applyTint(mutable, it.argbColor, it.strength)
+                        imageBitmap = mutable.asImageBitmap()
+                    }
                 }
 
                 else -> {}

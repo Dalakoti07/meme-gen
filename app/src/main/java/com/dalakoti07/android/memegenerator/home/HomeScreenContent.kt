@@ -108,7 +108,9 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
         MenuItemOptions.LOOKS -> {
             LazyRow(modifier = Modifier.fillMaxWidth()) {
                 items(10) {
-                    TintOptions(it)
+                    TintOptions(it) { action ->
+                        onAction(action)
+                    }
                 }
             }
         }
