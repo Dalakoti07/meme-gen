@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.dalakoti07.android.memegenerator"
-    compileSdk = 34
+    compileSdk = 35
 
     // Define the signing configurations
     signingConfigs {
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         applicationId = "com.dalakoti07.android.memegenerator"
         minSdk = 31
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 2
         versionName = "1.1"
 

@@ -58,3 +58,11 @@ To build and install the app in running emulator
         - [ ] Rotate
         - [ ] Frames
         - [ ] Emoji
+
+# Fastlane
+Gradle: pass -PreleaseDebuggable=true to make release debuggable.
+
+Fastlane:
+android build_release: builds Release with optional debuggable.
+android upload_internal: builds and uploads AAB to Play internal track using GOOGLE_PLAY_JSON_KEY.
+
