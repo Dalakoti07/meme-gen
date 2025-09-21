@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.dalakoti07.android.memegenerator"
-    compileSdk = 34
+    compileSdk = 35
 
     // Define the signing configurations
     signingConfigs {
@@ -20,7 +20,7 @@ android {
     defaultConfig {
         applicationId = "com.dalakoti07.android.memegenerator"
         minSdk = 31
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 2
         versionName = "1.1"
 
@@ -33,6 +33,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            // Allow toggling debuggable for CI via -PreleaseDebuggable=true
+            isDebuggable = (project.findProperty("releaseDebuggable") == "true")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -49,6 +51,11 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+        }
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"

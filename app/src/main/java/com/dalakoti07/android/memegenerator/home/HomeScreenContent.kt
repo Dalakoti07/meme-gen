@@ -35,6 +35,7 @@ import com.dalakoti07.android.memegenerator.export.saveBitmapToFile
 import com.dalakoti07.android.memegenerator.home.composables.EditingOptions
 import com.dalakoti07.android.memegenerator.home.composables.TheCanvasArea
 import com.dalakoti07.android.memegenerator.home.composables.TintOptions
+import com.dalakoti07.android.memegenerator.home.composables.tintColorPalette
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -107,8 +108,10 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
     when (states.menuItemSelected) {
         MenuItemOptions.LOOKS -> {
             LazyRow(modifier = Modifier.fillMaxWidth()) {
-                items(10) {
-                    TintOptions(it)
+                items(tintColorPalette.size) {
+                    TintOptions(it) { action ->
+                        onAction(action)
+                    }
                 }
             }
         }
@@ -128,6 +131,38 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
                         "Emoji", "Add Emoji on top of Images",
                         onClick = {
                             onAction(UiAction.AddEmojiOverImage)
+                        },
+                    )
+                }
+                item {
+                    EditingOptions(
+                        "Sketch", "Pencil sketch effect",
+                        onClick = {
+                            onAction(UiAction.ApplySketch())
+                        },
+                    )
+                }
+                item {
+                    EditingOptions(
+                        "Oil Paint", "Oil painting effect",
+                        onClick = {
+                            onAction(UiAction.ApplyOilPaint())
+                        },
+                    )
+                }
+                item {
+                    EditingOptions(
+                        "Watercolor", "Kuwahara watercolor",
+                        onClick = {
+                            onAction(UiAction.ApplyWatercolor())
+                        },
+                    )
+                }
+                item {
+                    EditingOptions(
+                        "Halftone", "Comic dot shading",
+                        onClick = {
+                            onAction(UiAction.ApplyHalftone())
                         },
                     )
                 }

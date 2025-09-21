@@ -1,0 +1,44 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseDebuggable:
+        description: 'Set release build debuggable'
+        required: false
+        default: 'false'
+      track:
+        description: 'Play track (internal, alpha, beta, production)'
+        required: false
+        default: 'internal'
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install fastlane
+        run: |
+          gem install fastlane -NV
+
+      - name: Build and upload via fastlane
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          bundle exec fastlane android upload_internal release_debuggable:${{ github.event.inputs.releaseDebuggable }} track:${{ github.event.inputs.track }} || fastlane android upload_internal release_debuggable:${{ github.event.inputs.releaseDebuggable }} track:${{ github.event.inputs.track }}
+
+
