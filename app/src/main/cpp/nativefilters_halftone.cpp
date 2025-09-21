@@ -2,7 +2,7 @@
 #include <android/bitmap.h>
 #include <algorithm>
 
-// Simple monochrome comic halftone: replaces each cell with a filled circle sized by luminance
+// Monochrome comic halftone: per-cell dot with perceptual (area) scaling and simple gamma
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_dalakoti07_android_memegenerator_nativefilters_NativeFilters_applyHalftone(
@@ -18,6 +18,7 @@ Java_com_dalakoti07_android_memegenerator_nativefilters_NativeFilters_applyHalft
     const int stride = (int)info.stride;
     const int cs = std::max(4, (int)cellSize);
     const int half = cs / 2;
+    const float gamma = 0.9f; // tweak contrast of dots (1.0 = linear)
 
     for (int y0 = 0; y0 < h; y0 += cs) {
         for (int x0 = 0; x0 < w; x0 += cs) {
@@ -35,12 +36,16 @@ Java_com_dalakoti07_android_memegenerator_nativefilters_NativeFilters_applyHalft
             }
             if (cnt == 0) continue;
             int avg = sum / cnt; // 0..255
-            float t = 1.f - (avg / 255.f); // darker -> bigger dot
-            int radius = (int)(t * half);
+            // Map luminance to area (perceptual): radius ~ sqrt(1 - L)
+            float lin = 1.f - (avg / 255.f); // darker -> larger
+            // gamma to tune mid-tones
+            float t = powf(lin, gamma);
+            int radius = (int)(sqrtf(std::max(0.f, t)) * half);
+            if (radius < 1 && lin > 0.04f) radius = 1; // ensure visibility for not-quite-white
             int cx = x0 + half;
             int cy = y0 + half;
 
-            // Fill cell with white
+            // Fill cell with white background (paper)
             for (int y = y0; y < y1; ++y) {
                 unsigned char* row = (unsigned char*)pixels + (size_t)y * stride;
                 for (int x = x0; x < x1; ++x) {
