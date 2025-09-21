@@ -33,6 +33,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            // Allow toggling debuggable for CI via -PreleaseDebuggable=true
+            isDebuggable = (project.findProperty("releaseDebuggable") == "true")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

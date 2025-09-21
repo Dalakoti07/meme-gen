@@ -1,0 +1,25 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build Release (optionally debuggable)"
+  lane :build_release do |options|
+    release_debuggable = options[:release_debuggable] || false
+    gradle(task: "assembleRelease", project_dir: "./", properties: { "releaseDebuggable" => release_debuggable.to_s })
+  end
+
+  desc "Upload AAB to Play Console (internal track)"
+  lane :upload_internal do |options|
+    release_debuggable = options[:release_debuggable] || false
+    build_release(release_debuggable: release_debuggable)
+    supply(
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      track: options[:track] || "internal",
+      json_key_data: ENV["GOOGLE_PLAY_JSON_KEY"],
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
+
+
