@@ -22,6 +22,7 @@ sealed class OneTimeEvents {
     data object ShowAddEmojiDialog : OneTimeEvents()
     data class ApplyTint(val argbColor: Int, val strength: Float) : OneTimeEvents()
     data class ApplySketch(val edgeSigma: Float, val shadeSigma: Float) : OneTimeEvents()
+    data class ApplyOilPaint(val radius: Int, val levels: Int) : OneTimeEvents()
 }
 
 class MainViewModel : ViewModel() {
@@ -133,6 +134,11 @@ class MainViewModel : ViewModel() {
             is UiAction.ApplySketch -> {
                 viewModelScope.launch {
                     _events.send(OneTimeEvents.ApplySketch(action.edgeSigma, action.shadeSigma))
+                }
+            }
+            is UiAction.ApplyOilPaint -> {
+                viewModelScope.launch {
+                    _events.send(OneTimeEvents.ApplyOilPaint(action.radius, action.levels))
                 }
             }
         }

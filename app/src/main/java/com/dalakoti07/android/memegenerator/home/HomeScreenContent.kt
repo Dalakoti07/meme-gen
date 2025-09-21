@@ -142,6 +142,14 @@ fun SubMenuAsPerMenu(states: MainUiStates, onAction: (UiAction) -> Unit) {
                         },
                     )
                 }
+                item {
+                    EditingOptions(
+                        "Oil Paint", "Oil painting effect",
+                        onClick = {
+                            onAction(UiAction.ApplyOilPaint())
+                        },
+                    )
+                }
             }
         }
 

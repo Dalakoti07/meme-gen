@@ -32,4 +32,9 @@ sealed class UiAction {
         val edgeSigma: Float = 1.0f,
         val shadeSigma: Float = 10.0f,
     ) : UiAction()
+
+    data class ApplyOilPaint(
+        val radius: Int = 3,
+        val levels: Int = 16,
+    ) : UiAction()
 }

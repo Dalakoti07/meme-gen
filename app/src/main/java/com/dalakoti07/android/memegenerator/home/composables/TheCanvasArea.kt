@@ -219,6 +219,14 @@ fun BoxWithConstraintsScope.TheCanvasArea(
                     }
                 }
 
+                is OneTimeEvents.ApplyOilPaint -> {
+                    originalBitmap?.let { src ->
+                        val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
+                        NativeFilters.applyOilPaint(mutable, it.radius, it.levels)
+                        imageBitmap = mutable.asImageBitmap()
+                    }
+                }
+
                 else -> {}
             }
         }
