@@ -1,6 +1,9 @@
 #include <jni.h>
 #include <android/bitmap.h>
 #include <cmath>
+#include <vector>
+#include <algorithm>
+#include <cstdint>
 
 static inline uint8_t clamp8(int v) { return (uint8_t) (v < 0 ? 0 : (v > 255 ? 255 : v)); }
 

@@ -211,6 +211,14 @@ fun BoxWithConstraintsScope.TheCanvasArea(
                     }
                 }
 
+                is OneTimeEvents.ApplySketch -> {
+                    originalBitmap?.let { src ->
+                        val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
+                        NativeFilters.applySketch(mutable, it.edgeSigma, it.shadeSigma)
+                        imageBitmap = mutable.asImageBitmap()
+                    }
+                }
+
                 else -> {}
             }
         }

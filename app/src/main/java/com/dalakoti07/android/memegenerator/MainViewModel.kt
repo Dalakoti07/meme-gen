@@ -21,6 +21,7 @@ sealed class OneTimeEvents {
     data object ExportAsImage : OneTimeEvents()
     data object ShowAddEmojiDialog : OneTimeEvents()
     data class ApplyTint(val argbColor: Int, val strength: Float) : OneTimeEvents()
+    data class ApplySketch(val edgeSigma: Float, val shadeSigma: Float) : OneTimeEvents()
 }
 
 class MainViewModel : ViewModel() {
@@ -127,6 +128,11 @@ class MainViewModel : ViewModel() {
             is UiAction.ApplyTint -> {
                 viewModelScope.launch {
                     _events.send(OneTimeEvents.ApplyTint(action.argbColor, action.strength))
+                }
+            }
+            is UiAction.ApplySketch -> {
+                viewModelScope.launch {
+                    _events.send(OneTimeEvents.ApplySketch(action.edgeSigma, action.shadeSigma))
                 }
             }
         }

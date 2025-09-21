@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(nativefilters)
 
-add_library(nativefilters SHARED nativefilters.cpp)
+add_library(nativefilters SHARED
+    nativefilters.cpp
+    nativefilters_sketch.cpp
+)
 
 find_library(log-lib log)
 find_library(jnigraphics-lib jnigraphics)

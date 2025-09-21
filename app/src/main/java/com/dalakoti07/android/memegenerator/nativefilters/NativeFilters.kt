@@ -8,6 +8,7 @@ object NativeFilters {
     }
 
     external fun applyTint(bitmap: Bitmap, argbColor: Int, strength: Float)
+    external fun applySketch(bitmap: Bitmap, edgeSigma: Float, shadeSigma: Float)
 }
 
 

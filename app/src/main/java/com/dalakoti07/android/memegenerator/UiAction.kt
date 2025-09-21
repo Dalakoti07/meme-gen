@@ -27,4 +27,9 @@ sealed class UiAction {
         val argbColor: Int,
         val strength: Float = 0.4f,
     ) : UiAction()
+
+    data class ApplySketch(
+        val edgeSigma: Float = 1.0f,
+        val shadeSigma: Float = 10.0f,
+    ) : UiAction()
 }

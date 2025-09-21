@@ -19,7 +19,7 @@ import com.dalakoti07.android.memegenerator.MenuItemOptions
 import com.dalakoti07.android.memegenerator.home.HomeScreenContent
 import com.dalakoti07.android.memegenerator.ui.theme.MemeGeneratorTheme
 
-private val tintColorPalette = listOf(
+val tintColorPalette = listOf(
     Color(0xFF641B2E),
     Color(0xFF626F47),
     Color(0xFFBB3E00),
@@ -57,19 +57,19 @@ fun TintOptions(idx: Int, onTintSelected: (UiAction.ApplyTint) -> Unit = {}) {
                 onTintSelected(
                     UiAction.ApplyTint(
                         argbColor = android.graphics.Color.argb(
-                            (0.9f * 255).toInt(),
+                            (0.4f * 255).toInt(),
                             (c.red * 255).toInt(),
                             (c.green * 255).toInt(),
                             (c.blue * 255).toInt()
                         ),
-                        strength = 0.9f,
+                        strength = 0.4f,
                     )
                 )
             }
             .padding(10.dp)
             .size(width = 80.dp, height = 100.dp),
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.TopEnd,
     ) {
-        Text("Idx $idx", color = Color.White)
+        Text("$idx", color = Color.White)
     }
 }
